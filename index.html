@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+</head>
+<body>
+<!-- <input type="file" accept="image/*" capture="user"> -->
+
+<video id="player" controls autoplay></video>
+<button id="capture">Capture</button>
+<h1>Capture Image</h1>
+<canvas id="canvas" width=200 height=200></canvas>
+<h1 id="result"></h1>
+<script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
+<script>
+  const player = document.getElementById('player');
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const captureButton = document.getElementById('capture');
+  var target = new Image();
+  
+  const constraints = {
+    video: true,
+  };
+
+  captureButton.addEventListener('click', () => {
+  
+   context.drawImage(player, 0, 0, canvas.width, canvas.height);
+    var imgData = context.getImageData(50,50,50,50);
+    target.src = canvas.toDataURL();
+    // console.log(target.src);
+  	getText(target.src);
+  });
+
+
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then((stream) => {
+      player.srcObject = stream;
+    });
+
+	function getText(img) {
+		const { createWorker } = Tesseract;
+		const worker = createWorker();
+		(async () => {
+		  await worker.load();
+		  await worker.loadLanguage('eng');
+		  await worker.initialize('eng');
+		  const { data: { text } } = await worker.recognize(img);
+		  console.log(text);
+		  document.getElementById('result').innerText = text;
+		  await worker.terminate();
+		})();
+	}
+  </script>
+</body>
+</html>
